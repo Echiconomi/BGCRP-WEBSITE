@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    #chat {
+      width: 400px;
+      margin: 0 auto;
+    }
+    #messageInput {
+      width: 80%;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    #sendButton {
+      width: 18%;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    #imageInput {
+      display: none;
+    }
+    #sendImageButton {
+      margin-top: 10px;
+      padding: 10px;
+    }
+    #messageList {
+      list-style-type: none;
+      padding: 0;
+    }
+    .message {
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: #f2f2f2;
+      border-radius: 5px;
+      position: relative;
+    }
+    .message img {
+      max-width: 100%;
+      cursor: pointer;
+    }
+    .deleteButton {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat">
+    <h2>World Chat</h2>
+    <ul id="messageList"></ul>
+    <input type="text" id="messageInput" placeholder="Type your message...">
+    <button id="sendButton">Send</button>
+    <input type="file" id="imageInput" accept="image/*">
+    <button id="sendImageButton">Send Image</button>
+    <button id="messageUserButton">Message User</button> <!-- Added Message User button -->
+  </div>
+
+  <!-- Login Panel -->
+  <div id="loginPanel">
+    <h2>Login Panel</h2>
+    <input type="text" id="username" placeholder="Username" required><br><br>
+    <input type="password" id="password" placeholder="Password" required><br><br>
+    <button id="loginButton">Login</button>
+  </div>
+
+  <!-- Private Message Interface -->
+  <div id="privateMessageInterface" style="display: none;">
+    <h2>Private Messages</h2>
+    <p>Conversation with <span id="recipientUsername"></span>:</p>
+    <ul id="privateMessageList"></ul>
+    <input type="text" id="privateMessageInput" placeholder="Type your message...">
+    <button id="privateSendButton">Send</button>
+    <button id="backToChatButton">Back to Chat</button>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+  <script>
+    // Your web app's Firebase configuration
+    var firebaseConfig = {
+      apiKey: "AIzaSyBoGo963CApg7rxnJ2Z2v5BETZlU2weQnQ",
+      authDomain: "all-in-one-database.firebaseapp.com",
+      databaseURL: "https://all-in-one-database-default-rtdb.firebaseio.com",
+      projectId: "all-in-one-database",
+      storageBucket: "all-in-one-database.appspot.com",
+      messagingSenderId: "586125993756",
+      appId: "1:586125993756:web:5c4ffc97122342ce6afcd9",
+      measurementId: "G-NM8XT3QTWG"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // Get references to Firebase services
+    var database = firebase.database();
+    var storage = firebase.storage();
+
+    var messageList = document.getElementById('messageList');
+    var messageInput = document.getElementById('messageInput');
+    var sendButton = document.getElementById('sendButton');
+    var usernameInput = document.getElementById('username');
+    var passwordInput = document.getElementById('password');
+    var loginButton = document.getElementById('loginButton');
+    var loginPanel = document.getElementById('loginPanel');
+    var chat = document.getElementById('chat');
+    var imageInput = document.getElementById('imageInput');
+    var sendImageButton = document.getElementById('sendImageButton');
+    var messageUserButton = document.getElementById('messageUserButton');
+    var privateMessageInterface = document.getElementById('privateMessageInterface');
+    var privateMessageList = document.getElementById('privateMessageList');
+    var privateMessageInput = document.getElementById('privateMessageInput');
+    var privateSendButton = document.getElementById('privateSendButton');
+    var backToChatButton = document.getElementById('backToChatButton');
+
+    // Hide chat initially
+    chat.style.display = 'none';
+
+    // Function to display messages
+    function displayMessage(key, username, message) {
+      var listItem = document.createElement('li');
+      listItem.classList.add('message');
+      listItem.setAttribute('data-key', key); // Add data-key attribute
+      listItem.innerHTML = username + ': ' + message;
+      
+      // Create a delete button
+      var deleteButton = document.createElement('button');
+      deleteButton.innerText = 'Delete';
+      deleteButton.classList.add('deleteButton');
+      deleteButton.onclick = function() {
+        deleteMessage(key);
+      };
+      
+      // Append delete button to message
+      listItem.appendChild(deleteButton);
+      
+      messageList.appendChild(listItem);
+    }
+
+    // Function to send message to Firebase
+    function sendMessage() {
+      var message = messageInput.value;
+      if (message.trim() !== '') {
+        database.ref('messages').push().set({
+          username: usernameInput.value,
+          text: message,
+          timestamp: Date.now()
+        });
+        messageInput.value = '';
+      }
+    }
+
+    // Function to send image to Firebase
+    function sendImage(file) {
+      var storageRef = storage.ref();
+      var imageRef = storageRef.child('images/' + file.name);
+      imageRef.put(file).then(function(snapshot) {
+        return snapshot.ref.getDownloadURL();
+      }).then(function(downloadURL) {
+        database.ref('messages').push().set({
+          username: usernameInput.value,
+          image: downloadURL,
+          timestamp: Date.now()
+        });
+      }).catch(function(error) {
+        console.error('Error uploading image:', error);
+      });
+    }
+
+    // Event listener for send button click
+    sendButton.addEventListener('click', sendMessage);
+
+    // Event listener for send image button click
+    sendImageButton.addEventListener('click', function() {
+      imageInput.click();
+    });
+
+    // Event listener for file input change (image selection)
+    imageInput.addEventListener('change', function(event) {
+      var file = event.target.files[0];
+      if (file) {
+        sendImage(file);
+      }
+    });
+
+    // Event listener for message user button click
+    messageUserButton.addEventListener('click', function() {
+      var recipientUsername = prompt("Enter the username of the user you want to message:");
+      if (recipientUsername) {
+        // Check if the recipient username exists in the database
+        database.ref('users/' + recipientUsername).once('value', function(snapshot) {
+          var recipientExists = snapshot.exists();
+          if (recipientExists) {
+            // Proceed to private messaging with the recipient
+            openPrivateMessage(recipientUsername);
+          } else {
+            alert("User does not exist. Please enter a valid username.");
+          }
+        });
+      }
+    });
+
+    // Function to open private message with a specific user
+    function openPrivateMessage(recipientUsername) {
+      // Hide chat and show private message interface
+      chat.style.display = 'none';
+      privateMessageInterface.style.display = 'block';
+      
+      // Display recipient username
+      document.getElementById('recipientUsername').innerText = recipientUsername;
+      
+      // Fetch and display messages between current user and recipient from the database
+      fetchAndDisplayPrivateMessages(usernameInput.value, recipientUsername);
+    }
+
+    // Function to fetch and display private messages
+    function fetchAndDisplayPrivateMessages(sender, recipient) {
+      // Clear previous messages
+      privateMessageList.innerHTML = '';
+      
+      // Remove previous event listener to prevent duplication
+      var senderRef = database.ref('privateMessages/' + sender + '/' + recipient);
+      senderRef.off(); // Remove previous event listener
+      
+      // Fetch and display messages between sender and recipient from the database
+      senderRef.on('child_added', function(snapshot) {
+        var messageData = snapshot.val();
+        var message = messageData.text;
+        var sender = messageData.sender;
+        displayPrivateMessage(sender, message);
+      });
+    }
+
+    // Function to display private messages
+    function displayPrivateMessage(sender, message) {
+      var listItem = document.createElement('li');
+      listItem.innerHTML = '<strong>' + sender + ':</strong> ' + message;
+      privateMessageList.appendChild(listItem);
+    }
+
+    // Event listener for sending private message
+    privateSendButton.addEventListener('click', function() {
+      var recipientUsername = document.getElementById('recipientUsername').innerText;
+      var message = privateMessageInput.value.trim();
+      if (message !== '') {
+        // Store the message in the sender's private messages
+        var senderRef = database.ref('privateMessages/' + usernameInput.value + '/' + recipientUsername).push();
+        senderRef.set({
+          text: message,
+          sender: usernameInput.value
+        });
+
+        // Store the message in the recipient's private messages
+        var recipientRef = database.ref('privateMessages/' + recipientUsername + '/' + usernameInput.value).push();
+        recipientRef.set({
+          text: message,
+          sender: usernameInput.value
+        });
+
+        // Clear input field
+        privateMessageInput.value = '';
+      }
+    });
+
+    // Event listener for back to chat button
+    backToChatButton.addEventListener('click', function() {
+      // Hide private message interface and show chat
+      privateMessageInterface.style.display = 'none';
+      chat.style.display = 'block';
+    });
+
+    // Function to handle login
+    loginButton.addEventListener('click', function() {
+      var username = usernameInput.value;
+      var password = passwordInput.value;
+
+      // Check if the username exists in the database
+      database.ref('users/' + username).once('value', function(snapshot) {
+        var user = snapshot.val();
+        if (user && user.password === password) {
+          alert('Login successful!');
+          loginPanel.style.display = 'none'; // Hide login panel
+          chat.style.display = 'block'; // Show chat
+        } else {
+          alert('Invalid username or password. Please try again.');
+        }
+      });
+    });
+
+    // Listen for new messages in Firebase
+    database.ref('messages').on('child_added', function(snapshot) {
+      var key = snapshot.key;
+      var messageData = snapshot.val();
+      var username = messageData.username;
+      var message = messageData.text;
+      var image = messageData.image;
+      if (image) {
+        displayMessage(key, username, '<img src="' + image + '" onclick="showFullImage(this)">');
+      } else {
+        displayMessage(key, username, message);
+      }
+    });
+
+    // Function to show full-size image when clicked
+    function showFullImage(img) {
+      window.open(img.src, '_blank');
+    }
+
+    // Function to delete message
+    function deleteMessage(key) {
+      var confirmation = confirm('Are you sure you want to delete this message?');
+      if (confirmation) {
+        // Get the username of the logged-in user
+        var currentUser = usernameInput.value;
+
+        // Get the username associated with the message
+        database.ref('messages/' + key).once('value', function(snapshot) {
+          var messageData = snapshot.val();
+          var messageUsername = messageData.username;
+
+          // Check if the logged-in user is the same as the user who posted the message
+          if (currentUser === messageUsername) {
+            // Remove message from the database
+            database.ref('messages/' + key).remove();
+
+            // Remove message from the DOM
+            var messageItem = document.querySelector('[data-key="' + key + '"]');
+            if (messageItem) {
+              messageItem.remove();
+            }
+          } else {
+            alert("You can only delete your own messages.");
+          }
+        });
+      }
+    }
+  </script>
+</body>
+</html>
