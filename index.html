@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LAC social Media platform</title>
+  <title>World Chat</title>
   <style>
+    /* CSS styles */
     body {
       font-family: Arial, sans-serif;
       background-image: url('background_image.jpg'); /* Add background image */
@@ -100,10 +101,11 @@
       <input type="password" id="password" placeholder="Password" required><br>
     </div>
     <button id="loginButton">Login</button>
+    <button id="adminPanelButton">Admin Panel</button> <!-- Add Admin Panel button -->
   </div>
 
   <div id="chat" class="panel">
-    <h2>LAC Social Media Platform</h2>
+    <h2>World Chat</h2>
     <ul id="messageList"></ul>
     <div class="input-container">
       <input type="text" id="messageInput" placeholder="Type your message...">
@@ -169,6 +171,7 @@
     var backToChatButton = document.getElementById('backToChatButton');
     var recipientUsername = document.getElementById('recipientUsername');
     var loadingScreen = document.getElementById('loadingScreen');
+    var adminPanelButton = document.getElementById('adminPanelButton'); // Add Admin Panel button reference
 
     // Add event listeners
     loginButton.addEventListener('click', login);
@@ -403,6 +406,17 @@
     function hideLoadingScreen() {
       loadingScreen.style.display = 'none';
     }
+
+    // Admin Panel button event listener
+    adminPanelButton.addEventListener('click', function() {
+      var password = prompt("Enter the password for admin access:");
+      if (password === "172006") {
+        // Redirect to the admin panel or perform necessary actions
+        window.location.href = 'admin.html';
+      } else {
+        alert("Incorrect password. Access denied.");
+      }
+    });
   </script>
 </body>
 </html>
