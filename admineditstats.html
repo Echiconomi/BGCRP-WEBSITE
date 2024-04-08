@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World Chat - Admin Panel</title>
+  <style>
+    /* CSS styles */
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('background_image.jpg'); /* Add background image */
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-position: center;
+      margin: 0;
+      padding: 0;
+      background-color: #4CAF50; /* Change background color to green */
+    }
+    .panel {
+      width: 90%; /* Adjust width for responsiveness */
+      margin: 20px auto;
+      padding: 20px;
+      box-sizing: border-box;
+      background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+      border-radius: 10px; /* Add border radius */
+      text-align: center;
+    }
+    .input-container {
+      margin-bottom: 20px;
+    }
+    input[type="text"],
+    input[type="password"] {
+      width: 80%;
+      padding: 10px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-top: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #fff;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #4CAF50;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div id="adminPanel" class="panel">
+    <h2>Admin Panel</h2>
+    <div id="statsInput">
+      <div class="input-container">
+        <input type="text" id="userToUpdate" placeholder="Username to update stats" required><br>
+      </div>
+      <div class="input-container">
+        <input type="text" id="statsMessage" placeholder="Stats message" required><br>
+      </div>
+      <button id="addStatsButton">Add Stats</button>
+      <button id="updateStatsButton">Update Stats</button>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+  <script>
+    // Your Firebase configuration
+    var firebaseConfig = {
+      apiKey: "AIzaSyBoGo963CApg7rxnJ2Z2v5BETZlU2weQnQ",
+  authDomain: "all-in-one-database.firebaseapp.com",
+  databaseURL: "https://all-in-one-database-default-rtdb.firebaseio.com",
+  projectId: "all-in-one-database",
+  storageBucket: "all-in-one-database.appspot.com",
+  messagingSenderId: "586125993756",
+  appId: "1:586125993756:web:5c4ffc97122342ce6afcd9",
+  measurementId: "G-NM8XT3QTWG"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // Get reference to Firebase database
+    var database = firebase.database();
+
+    // Get elements
+    var userToUpdateInput = document.getElementById('userToUpdate');
+    var statsMessageInput = document.getElementById('statsMessage');
+    var addStatsButton = document.getElementById('addStatsButton');
+    var updateStatsButton = document.getElementById('updateStatsButton');
+
+    // Add event listeners
+    addStatsButton.addEventListener('click', addStats);
+    updateStatsButton.addEventListener('click', updateStats);
+
+    // Function to add stats for a user
+    function addStats() {
+      var username = userToUpdateInput.value;
+      var statsMessage = statsMessageInput.value;
+
+      // Check if the username exists in the database
+      database.ref('users/' + username).once('value', function(snapshot) {
+        var user = snapshot.val();
+        if (user) {
+          // If the user exists, add the stats message to their profile
+          var statsRef = database.ref('userStats/' + username);
+          statsRef.set({
+            message: statsMessage
+          }).then(function() {
+            alert('Stats added successfully!');
+          }).catch(function(error) {
+            console.error('Error adding stats: ', error);
+          });
+        } else {
+          alert('User does not exist.');
+        }
+      });
+    }
+
+    // Function to update stats for a user
+    function updateStats() {
+      var username = userToUpdateInput.value;
+      var statsMessage = statsMessageInput.value;
+
+      // Check if the username exists in the database
+      database.ref('userStats/' + username).once('value', function(snapshot) {
+        var userStats = snapshot.val();
+        if (userStats) {
+          // If the user's stats exist, update the stats message
+          snapshot.ref.update({
+            message: statsMessage
+          }).then(function() {
+            alert('Stats updated successfully!');
+          }).catch(function(error) {
+            console.error('Error updating stats: ', error);
+          });
+        } else {
+          alert('User stats do not exist.');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

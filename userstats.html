@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World Chat - User Panel</title>
+  <style>
+    /* CSS styles */
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('background_image.jpg'); /* Add background image */
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      background-position: center;
+      margin: 0;
+      padding: 0;
+      background-color: #4CAF50; /* Change background color to green */
+    }
+    .panel {
+      width: 90%; /* Adjust width for responsiveness */
+      margin: 20px auto;
+      padding: 20px;
+      box-sizing: border-box;
+      background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+      border-radius: 10px; /* Add border radius */
+      text-align: center;
+    }
+    .input-container {
+      margin-bottom: 20px;
+    }
+    input[type="text"],
+    input[type="password"] {
+      width: 80%;
+      padding: 10px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-top: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #fff;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #4CAF50;
+      color: #fff;
+    }
+    #chat, #privateMessageInterface {
+      display: none;
+    }
+    #messageList, #privateMessageList {
+      list-style-type: none;
+      padding: 0;
+      text-align: left;
+    }
+    .message, .private-message {
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: #f2f2f2;
+      border-radius: 5px;
+      position: relative;
+    }
+    .message img, .private-message img {
+      max-width: 100%;
+      cursor: pointer;
+    }
+    .deleteButton {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+      color: red;
+    }
+    #loadingScreen {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.5);
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <div id="userPanel" class="panel">
+    <h2>User Panel</h2>
+    <div id="loginPanel">
+      <h2>Login</h2>
+      <div class="input-container">
+        <input type="text" id="username" placeholder="Username" required><br>
+      </div>
+      <div class="input-container">
+        <input type="password" id="password" placeholder="Password" required><br>
+      </div>
+      <button id="loginButton">Login</button>
+    </div>
+    <div id="userStats" style="display:none;">
+      <h2>User Stats</h2>
+      <p>Here you can display user statistics</p>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+  <script>
+    // Your Firebase configuration
+    var firebaseConfig = {
+      apiKey: "AIzaSyBoGo963CApg7rxnJ2Z2v5BETZlU2weQnQ",
+  authDomain: "all-in-one-database.firebaseapp.com",
+  databaseURL: "https://all-in-one-database-default-rtdb.firebaseio.com",
+  projectId: "all-in-one-database",
+  storageBucket: "all-in-one-database.appspot.com",
+  messagingSenderId: "586125993756",
+  appId: "1:586125993756:web:5c4ffc97122342ce6afcd9",
+  measurementId: "G-NM8XT3QTWG"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // Get references to Firebase services
+    var database = firebase.database();
+    var storage = firebase.storage();
+
+    // Get elements
+    var userPanel = document.getElementById('userPanel');
+    var loginPanel = document.getElementById('loginPanel');
+    var userStatsPanel = document.getElementById('userStats');
+    var usernameInput = document.getElementById('username');
+    var passwordInput = document.getElementById('password');
+    var loginButton = document.getElementById('loginButton');
+
+    // Add event listeners
+    loginButton.addEventListener('click', login);
+
+    // Login function
+    function login() {
+      var username = usernameInput.value;
+      var password = passwordInput.value;
+
+      // Check if the username exists in the database
+      database.ref('users/' + username).once('value', function(snapshot) {
+        var user = snapshot.val();
+        if (user && user.password === password) {
+          alert('Login successful!');
+          loginPanel.style.display = 'none';
+          userStatsPanel.style.display = 'block';
+          // Fetch and display user statistics based on the username
+          fetchUserStats(username);
+        } else {
+          alert('Invalid username or password. Please try again.');
+        }
+      });
+    }
+
+    // Function to fetch and display user statistics
+    function fetchUserStats(username) {
+      // Fetch user statistics from the database and display them
+      database.ref('userStats/' + username).once('value', function(snapshot) {
+        var stats = snapshot.val();
+        if (stats) {
+          // If stats exist, display them
+          userStatsPanel.innerHTML = '<h2>User Stats</h2><p>' + stats.message + '</p>';
+        } else {
+          // If no stats exist, display a message indicating that
+          userStatsPanel.innerHTML = '<h2>User Stats</h2><p>No stats available.</p>';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
