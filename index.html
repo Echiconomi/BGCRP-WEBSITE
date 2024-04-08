@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LAC Social Media Platform</title>
+  <title>World Chat</title>
   <style>
     /* CSS styles */
     body {
@@ -89,9 +89,19 @@
       background: rgba(255, 255, 255, 0.5);
       z-index: 9999;
     }
+    .header {
+      background-color: #333;
+      color: white;
+      padding: 10px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
+  <div class="header">
+    <button id="aboutUserButton">About User</button> <!-- Add About User button -->
+  </div>
+
   <div id="loginPanel" class="panel">
     <h2>Login Panel</h2>
     <div class="input-container">
@@ -105,7 +115,7 @@
   </div>
 
   <div id="chat" class="panel">
-    <h2>LAC Social Media Platform</h2>
+    <h2>World Chat</h2>
     <ul id="messageList"></ul>
     <div class="input-container">
       <input type="text" id="messageInput" placeholder="Type your message...">
@@ -171,7 +181,8 @@
     var backToChatButton = document.getElementById('backToChatButton');
     var recipientUsername = document.getElementById('recipientUsername');
     var loadingScreen = document.getElementById('loadingScreen');
-    var adminPanelButton = document.getElementById('adminPanelButton'); // Add Admin Panel button reference
+    var adminPanelButton = document.getElementById('adminPanelButton');
+    var aboutUserButton = document.getElementById('aboutUserButton'); // Add About User button reference
 
     // Add event listeners
     loginButton.addEventListener('click', login);
@@ -180,6 +191,7 @@
     messageUserButton.addEventListener('click', openPrivateMessage);
     privateSendButton.addEventListener('click', sendPrivateMessage);
     backToChatButton.addEventListener('click', backToChat);
+    aboutUserButton.addEventListener('click', goToAdminPanel); // Add event listener for About User button
 
     // Login function
     function login() {
@@ -417,6 +429,11 @@
         alert("Incorrect password. Access denied.");
       }
     });
+
+    // About User button event listener
+    function goToAdminPanel() {
+      window.location.href = 'userstats.html';
+    }
   </script>
 </body>
 </html>
